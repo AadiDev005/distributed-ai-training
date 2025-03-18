@@ -25,7 +25,7 @@ services:
       KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
-      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"  # Ensures train-tasks is created if not present
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
       ALLOW_PLAINTEXT_LISTENER: "yes"
     depends_on:
       zookeeper:
@@ -67,7 +67,7 @@ services:
       - "8080:8080"
     environment:
       SPRING_DATA_MONGODB_URI: "mongodb://mongodb:27017/train_db"
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"  # Matches application.properties
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
     depends_on:
       mongodb:
         condition: service_healthy
@@ -92,7 +92,25 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-    entrypoint: ["/app/wait-for-kafka.sh", "/app/scheduler"]
+    entrypoint: ["/app/wait-for-kafka.sh", "kafka:9092", "./scheduler"]
+    restart: always
+    networks:
+      - train-network
+
+  worker-node:
+    image: worker-node:1.0
+    container_name: worker-node
+    build:
+      context: ./worker-node
+      dockerfile: Dockerfile
+    environment:
+      KAFKA_BROKER: "kafka:9092"
+    volumes:
+      - ./worker-node/wait-for-kafka.sh:/app/wait-for-kafka.sh
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/app/wait-for-kafka.sh", "kafka:9092", "./worker"]
     restart: always
     networks:
       - train-network

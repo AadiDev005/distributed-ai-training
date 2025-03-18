@@ -10,4 +10,4 @@ while ! nc -z $(echo $KAFKA_HOST | cut -d':' -f1) $(echo $KAFKA_HOST | cut -d':'
 done
 
 echo "Kafka is up - executing command"
-exec "${@:2}"
+exec /app/scheduler/main "${@:2}"

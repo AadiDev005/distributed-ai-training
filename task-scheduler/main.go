@@ -10,16 +10,19 @@ import (
 func initConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./config/") // Updated to use relative path for config directory
+	viper.AddConfigPath("./config/")   // Local run
+	viper.AddConfigPath("/app/config") // Docker container path
+
 	err := viper.ReadInConfig()
 	if err != nil {
 		logrus.Fatalf("Error reading config file: %v", err)
 	}
 
-	// Set logging level
+	// Set logging level with a default value
 	level, err := logrus.ParseLevel(viper.GetString("logging.level"))
 	if err != nil {
-		logrus.Fatalf("Invalid log level: %v", err)
+		logrus.Warnf("Invalid or missing log level in config, defaulting to 'info': %v", err)
+		level = logrus.InfoLevel
 	}
 	logrus.SetLevel(level)
 

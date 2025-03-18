@@ -1,9 +1,9 @@
 package scheduler
 
 import (
-	"bufio"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/sirupsen/logrus"
@@ -20,6 +20,7 @@ func StartScheduler() {
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = true
 	config.Producer.Retry.Max = 5
+	config.Producer.RequiredAcks = sarama.WaitForAll
 
 	producer, err := sarama.NewSyncProducer([]string{broker}, config)
 	if err != nil {
@@ -33,36 +34,29 @@ func StartScheduler() {
 
 	logrus.Info("Task Scheduler is running...")
 
-	// Listen for incoming tasks
-	reader := bufio.NewReader(os.Stdin)
+	// Get model name and data source from environment variables
+	model := os.Getenv("MODEL_NAME")
+	data := os.Getenv("DATA_SOURCE")
+
+	if model == "" || data == "" {
+		logrus.Fatalf("Error: MODEL_NAME or DATA_SOURCE environment variable not set")
+	}
+
+	message := fmt.Sprintf("Model: %s, Data: %s", model, data)
+	msg := &sarama.ProducerMessage{
+		Topic: topic,
+		Value: sarama.StringEncoder(message),
+	}
+
 	for {
-		fmt.Print("Enter model name: ")
-		model, err := reader.ReadString('\n')
-		if err != nil {
-			logrus.Errorf("Error reading model name: %v", err)
-			continue
-		}
-		model = model[:len(model)-1] // Trim the newline character
-
-		fmt.Print("Enter data source: ")
-		data, err := reader.ReadString('\n')
-		if err != nil {
-			logrus.Errorf("Error reading data source: %v", err)
-			continue
-		}
-		data = data[:len(data)-1] // Trim the newline character
-
-		message := fmt.Sprintf("Model: %s, Data: %s", model, data)
-		msg := &sarama.ProducerMessage{
-			Topic: topic,
-			Value: sarama.StringEncoder(message),
-		}
-
 		partition, offset, err := producer.SendMessage(msg)
 		if err != nil {
 			logrus.Errorf("Failed to send message: %v", err)
 		} else {
 			logrus.Infof("Message sent to partition %d with offset %d", partition, offset)
 		}
+
+		// Sleep for a while before sending the next message
+		time.Sleep(5 * time.Second)
 	}
 }
