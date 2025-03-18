@@ -1,43 +1,30 @@
 package com.example.apigateway.model;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
+@Document(collection = "train_requests")
 public class TrainRequest {
+    @Id
+    private String id; // Added for MongoDB primary key
+    @Setter
+    @Getter
     private String trainName;
+    @Setter
+    @Getter
     private String source;
+    @Setter
+    @Getter
     private String destination;
+    @Setter
+    @Getter
     private int numberOfSeats;
+    @Setter
+    @Getter
+    private String status; // Added to track task status (e.g., PENDING, PROCESSING, COMPLETED)
 
-    public String getTrainName() {
-        return trainName;
-    }
-
-    public void setTrainName(String trainName) {
-        this.trainName = trainName;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public void setSource(String source) {
-        this.source = source;
-    }
-
-    public String getDestination() {
-        return destination;
-    }
-
-    public void setDestination(String destination) {
-        this.destination = destination;
-    }
-
-    public int getNumberOfSeats() {
-        return numberOfSeats;
-    }
-
-    public void setNumberOfSeats(int numberOfSeats) {
-        this.numberOfSeats = numberOfSeats;
-    }
 }

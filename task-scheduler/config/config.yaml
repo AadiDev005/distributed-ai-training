@@ -1,0 +1,5 @@
+kafka:
+  broker: "kafka:9092"
+  topic: "training-tasks"
+logging:
+  level: "info"
